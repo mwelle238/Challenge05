@@ -2,6 +2,32 @@
 // the code isn't run until the browser has finished rendering all the elements
 // in the html.
 $(function () {
+
+var calendar = $('#calendar');
+var saveButtons = $('.saveBtn');
+console.log(calendar);
+console.log(saveButtons);
+
+saveTimeSlot = function(x) {
+  // get corresponding textField for the x button in saveButtons array.
+  // var apt = { text = x-textField.text, time = x}
+  // save to local storage
+    // check current local storage for a time matching slot, remove it
+    // add apt to array
+    // save to localStorage
+  console.log(x);
+}
+
+calendar.on('click', function (event){
+  event.preventDefault();
+  var element = event.target;
+  if (element.matches('.saveBtn'))
+  console.log(element);  // confirmed clicking on save button triggers.
+})
+
+
+
+
   // TODO: Add a listener for click events on the save button. This code should
   // use the id in the containing time-block as a key to save the user input in
   // local storage. HINT: What does `this` reference in the click listener
@@ -21,3 +47,5 @@ $(function () {
   //
   // TODO: Add code to display the current date in the header of the page.
 });
+
+
