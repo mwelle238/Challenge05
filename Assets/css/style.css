@@ -25,9 +25,12 @@ textarea {
 }
 
 .hour {
-  background-color: #ffffff;
+  background-color: #28bb7e;
   color: #000000;
-  border-top: 1px dashed #000000;
+  border: 1px solid black;
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
+  font-size: 200%;
 }
 
 .past {

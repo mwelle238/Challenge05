@@ -3,26 +3,111 @@
 // in the html.
 $(function () {
 
-var calendar = $('#calendar');
-var saveButtons = $('.saveBtn');
-console.log(calendar);
-console.log(saveButtons);
+var calendarEl = $('#calendar');
 
-saveTimeSlot = function(x) {
-  // get corresponding textField for the x button in saveButtons array.
-  // var apt = { text = x-textField.text, time = x}
-  // save to local storage
-    // check current local storage for a time matching slot, remove it
-    // add apt to array
-    // save to localStorage
-  console.log(x);
+console.log(calendar);
+
+
+
+// create the DOM
+var startTime = 8;
+var endTime = 17;
+for (var i=startTime; i<=endTime; i++){
+  var newSlot = $('<div>');
+  newSlot.attr('class', 'row time-block past');
+  calendarEl.append(newSlot);
+  var newDiv = $('<div>');
+  newDiv.attr('class', 'col-2 col-md-1 hour text-center py-3');
+  newDiv.text(i + ':00');
+  newSlot.append(newDiv);
+  var newTextbox = $('<textarea>');
+  newTextbox.attr('class', 'col-8 col-md-10 description');
+  newTextbox.attr('rows', 3);
+  newSlot.append(newTextbox);
+  var newButton = $('<button>');
+  newButton.attr('class', 'btn saveBtn col-2 col-md-1');
+  newButton.attr('aria-label', 'save');
+  newSlot.append(newButton);
+  var newImg = $('<i>');
+  newImg.attr('class', 'fas fa-save');
+  newImg.attr('aria-hidden', 'true');
+  newButton.append(newImg);
+}
+var textAreas = $('.description');
+
+var currentDayEl = $("#currentDay");
+var today = dayjs().format('MMMM D, YYYY');
+currentDayEl.text(today);
+
+var events = [];
+function getEvents() {
+  events = JSON.parse(localStorage.getItem("calendarEvents"));  
+  console.log(events);
+  refreshCalendar();
+}
+function saveEvents() {
+  localStorage.setItem('calendarEvents', JSON.stringify(events));
+  console.log(events);
+}
+function addEvent(time, text) {
+  var timeSlot = time.charAt(0);
+  if (timeSlot == 1) {
+    timeSlot += time.charAt(1);
+  }
+  console.log(timeSlot);
+  console.log(text);
+ var entry = {
+     date: 'date',
+     time: 'time',
+     text: 'text'  
+  };
+  entry.date = today;
+  entry.time = timeSlot;
+  entry.text = text;
+  console.log(entry);
+  if (events.length == 0) {
+    events.push(entry)
+  } else {
+  for (var i=0; i<events.length; i++) {
+     if (entry.date == events[i].date && entry.time == events[i].time){
+      if (text == ''){
+        events.splice(i, 1);
+      } else {
+        events[i].text = text;
+      } 
+    } else {
+      events.push(entry);
+     }
+    }
+  }
+  saveEvents();
 }
 
-calendar.on('click', function (event){
+function refreshCalendar() {
+  // parse through events for today matches.
+  for (var i=0; i<events.length; i++){
+    if (events[i].date == today){
+      x = events[i].time - startTime;  // get index
+      textAreas[x].value = events[i].text;
+    }
+  }
+}
+
+
+
+calendarEl.on('click', function (event){
   event.preventDefault();
   var element = event.target;
-  if (element.matches('.saveBtn'))
-  console.log(element);  // confirmed clicking on save button triggers.
+  if (element.matches('.saveBtn')){
+    //console.log(element);  // confirmed clicking on save button triggers.
+    var parent = element.parentElement;
+    //console.log(parent);
+    var time = parent.children[0].textContent;
+    var text = parent.children[1].value;
+    //console.log(timeBlock);
+    //console.log(text);
+    addEvent(time, text);
+  }
 })
 
 
@@ -46,6 +131,8 @@ calendar.on('click', function (event){
   // attribute of each time-block be used to do this?
   //
   // TODO: Add code to display the current date in the header of the page.
+
+  getEvents();
 });
 
 
