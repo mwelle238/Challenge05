@@ -60,3 +60,8 @@ textarea {
   font-size: 20px;
   transition: all 0.3s ease-in-out;
 }
+
+.dateBtn {
+  border: 1px solid black;
+  border-radius: 6px;
+}

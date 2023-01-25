@@ -5,40 +5,38 @@ $(function () {
 
 var calendarEl = $('#calendar');
 
-console.log(calendar);
-
-
-
-// create the DOM
+// create the DOM for the planner inside the #calendar div
 var startTime = 8;
 var endTime = 17;
-for (var i=startTime; i<=endTime; i++){
+for (var i=startTime; i<=endTime; i++){  // for each time from startTime to endTime inclusive
   var newSlot = $('<div>');
   newSlot.attr('class', 'row time-block past');
-  calendarEl.append(newSlot);
+  calendarEl.append(newSlot);  //add new row to planner
   var newDiv = $('<div>');
   newDiv.attr('class', 'col-2 col-md-1 hour text-center py-3');
   newDiv.text(i + ':00');
-  newSlot.append(newDiv);
+  newSlot.append(newDiv);  //add the time tab to the row
   var newTextbox = $('<textarea>');
   newTextbox.attr('class', 'col-8 col-md-10 description');
   newTextbox.attr('rows', 3);
-  newSlot.append(newTextbox);
+  newSlot.append(newTextbox);  //add the textarea to the row
   var newButton = $('<button>');
   newButton.attr('class', 'btn saveBtn col-2 col-md-1');
   newButton.attr('aria-label', 'save');
-  newSlot.append(newButton);
+  newSlot.append(newButton);  //add the save button to the row
   var newImg = $('<i>');
   newImg.attr('class', 'fas fa-save');
   newImg.attr('aria-hidden', 'true');
-  newButton.append(newImg);
+  newButton.append(newImg);  //add the save disk icon to the save button
 }
-var textAreas = $('.description');
+var textAreas = $('.description');  // grab all of the textareas
 
-var currentDayEl = $("#currentDay");
-var today = dayjs().format('MMMM D, YYYY');
-currentDayEl.text(today);
+var currentDayEl = $("#currentDay");  // grab the currentDay paragraph element to update the current day
+var day = dayjs().format('MMMM D, YYYY');  // default to today
+currentDayEl.text(day);
+var datepickerEl = $("#datepicker"); //grab the datepicker text box
 
+// make an array to store events.  functions to read them from localstorage and write them to it.
 var events = [];
 function getEvents() {
   events = JSON.parse(localStorage.getItem("calendarEvents"));  
@@ -49,6 +47,8 @@ function saveEvents() {
   localStorage.setItem('calendarEvents', JSON.stringify(events));
   console.log(events);
 }
+
+// add a new event to the array
 function addEvent(time, text) {
   var timeSlot = time.charAt(0);
   if (timeSlot == 1) {
@@ -61,39 +61,43 @@ function addEvent(time, text) {
      time: 'time',
      text: 'text'  
   };
-  entry.date = today;
+  entry.date = day;
   entry.time = timeSlot;
   entry.text = text;
   console.log(entry);
+  // if events is empty, add entry
   if (events.length == 0) {
-    events.push(entry)
-  } else {
+    events.push(entry);
+  } else { // check if an event with the same date and time is in the events array
   for (var i=0; i<events.length; i++) {
      if (entry.date == events[i].date && entry.time == events[i].time){
-      if (text == ''){
+      if (text == ''){ // delete empty text event
         events.splice(i, 1);
-      } else {
+      } else {  // update the text in the existing events entry
         events[i].text = text;
       } 
-    } else {
+    } else {  // add a new entry to the events array
       events.push(entry);
      }
     }
   }
-  saveEvents();
+  saveEvents();  // save to local storage
 }
 
 function refreshCalendar() {
+  //clear calendar
+  for (var i=0; i<textAreas.length; i++) {
+    textAreas[i].value = '';
+  }
   // parse through events for today matches.
   for (var i=0; i<events.length; i++){
-    if (events[i].date == today){
+    if (events[i].date == day){
       x = events[i].time - startTime;  // get index
       textAreas[x].value = events[i].text;
     }
   }
+  currentDayEl.text(day);
 }
-
-
 
 calendarEl.on('click', function (event){
   event.preventDefault();
@@ -107,6 +111,14 @@ calendarEl.on('click', function (event){
     //console.log(timeBlock);
     //console.log(text);
     addEvent(time, text);
+  }
+  if (element.matches('.dateBtn')){
+    if (datepickerEl.val() == '') {
+      return;
+    } else {
+      day = dayjs(datepickerEl.val()).format('MMMM D, YYYY')
+      refreshCalendar();
+    }
   }
 })
 
