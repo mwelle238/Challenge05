@@ -1,7 +1,3 @@
-// Wrap all code that interacts with the DOM in a call to jQuery to ensure that
-// the code isn't run until the browser has finished rendering all the elements
-// in the html.
-$(function () {
 
 var calendarEl = $('#calendar');
 // create the DOM for the planner inside the #calendar div
@@ -39,8 +35,12 @@ var datepickerEl = $("#datepicker"); //grab the datepicker text box
 
 // make an array to store events.  functions to read them from localstorage and write them to it.
 var events = [];
+console.log(events);
 function getEvents() {
-  events = JSON.parse(localStorage.getItem("calendarEvents"));  
+  events = JSON.parse(localStorage.getItem("calendarEvents")); 
+  if (!events) {
+    events = [];
+  } 
   //console.log(events);
   refreshCalendar();
 }
@@ -156,7 +156,6 @@ calendarEl.on('click', function (event){
   }
 })
 
-  getEvents();
-});
+getEvents();
 
 
