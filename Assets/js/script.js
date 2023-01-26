@@ -4,7 +4,6 @@
 $(function () {
 
 var calendarEl = $('#calendar');
-
 // create the DOM for the planner inside the #calendar div
 var startTime = 8;
 var endTime = 17;
@@ -14,7 +13,9 @@ for (var i=startTime; i<=endTime; i++){  // for each time from startTime to endT
   calendarEl.append(newSlot);  //add new row to planner
   var newDiv = $('<div>');
   newDiv.attr('class', 'col-2 col-md-1 hour text-center py-3');
-  newDiv.text(i + ':00');
+  var t = (i == 12 ? 12 : i%12);
+  var meridiem = (i < 12 ? 'AM' : "PM");
+  newDiv.text(t + meridiem);
   newSlot.append(newDiv);  //add the time tab to the row
   var newTextbox = $('<textarea>');
   newTextbox.attr('class', 'col-8 col-md-10 description');
@@ -30,22 +31,31 @@ for (var i=startTime; i<=endTime; i++){  // for each time from startTime to endT
   newButton.append(newImg);  //add the save disk icon to the save button
 }
 var textAreas = $('.description');  // grab all of the textareas
-
+var timeBlocks = $('.time-block');  // grab all of the time-blocks 
 var currentDayEl = $("#currentDay");  // grab the currentDay paragraph element to update the current day
 var day = dayjs().format('MMMM D, YYYY');  // default to today
-currentDayEl.text(day);
+currentDayEl.text(day);  // set text to day
 var datepickerEl = $("#datepicker"); //grab the datepicker text box
 
 // make an array to store events.  functions to read them from localstorage and write them to it.
 var events = [];
 function getEvents() {
   events = JSON.parse(localStorage.getItem("calendarEvents"));  
-  console.log(events);
+  //console.log(events);
   refreshCalendar();
 }
+
 function saveEvents() {
+  var e = [];
+  while (events.length > 0) {  // remove all empty text entries from the array.  Was doing this in addEvent but was not deleting empties and sometimes adding duplicate time slots.
+    if (events[0].text != ''){
+      e.push(events[0]);
+    }
+    events.splice(0,1);
+  }
+  events = e;
   localStorage.setItem('calendarEvents', JSON.stringify(events));
-  console.log(events);
+  //console.log(events);
 }
 
 // add a new event to the array
@@ -64,22 +74,19 @@ function addEvent(time, text) {
   entry.date = day;
   entry.time = timeSlot;
   entry.text = text;
-  console.log(entry);
+  //console.log(entry);
   // if events is empty, add entry
   if (events.length == 0) {
     events.push(entry);
   } else { // check if an event with the same date and time is in the events array
-  for (var i=0; i<events.length; i++) {
-     if (entry.date == events[i].date && entry.time == events[i].time){
-      if (text == ''){ // delete empty text event
+    for (var i=0; i<events.length; i++) {
+      if (entry.date == events[i].date && entry.time == events[i].time){
+        // remove the old entry - don't add new entry, will do that outside for loop
         events.splice(i, 1);
-      } else {  // update the text in the existing events entry
-        events[i].text = text;
-      } 
-    } else {  // add a new entry to the events array
-      events.push(entry);
-     }
+        break;
+      }
     }
+    events.push(entry);
   }
   saveEvents();  // save to local storage
 }
@@ -97,22 +104,49 @@ function refreshCalendar() {
     }
   }
   currentDayEl.text(day);
+  colorCalendar();
 }
+
+function colorCalendar() {
+  var now = dayjs().format('MMDDYYYY.HH')
+  //console.log(now);
+  var nowHour = Math.round((now % 1) *  100);  // was getting a .999999932621 without the Math.round
+  // console.log(nowHour);
+  var calendarDate = dayjs(currentDayEl.text()).format('MMDDYYYY');
+  //console.log(calendarDate);
+  for (var i=0; i<timeBlocks.length; i++){
+    if (now - calendarDate < 0) {
+      // calendarDate is in the Future
+      timeBlocks[i].setAttribute('class', 'row time-block future')
+    } else if (now - calendarDate > 1) {
+      timeBlocks[i].setAttribute('class', 'row time-block past');
+    } else {
+      //calendarDate is today
+      if (i + startTime < nowHour){
+        timeBlocks[i].setAttribute('class', 'row time-block past');
+      } else if (i + startTime > nowHour) {
+        timeBlocks[i].setAttribute('class', 'row time-block future');
+      } else {
+        timeBlocks[i].setAttribute('class', 'row time-block present');
+      }
+    }
+  }
+}
+
 
 calendarEl.on('click', function (event){
   event.preventDefault();
-  var element = event.target;
-  if (element.matches('.saveBtn')){
+  var element = $(event.target);
+  if (element.is('.saveBtn')){
     //console.log(element);  // confirmed clicking on save button triggers.
-    var parent = element.parentElement;
     //console.log(parent);
-    var time = parent.children[0].textContent;
-    var text = parent.children[1].value;
-    //console.log(timeBlock);
+    var time = element.prev().prev().text();  // sibling 2 up - time div
+    var text = element.prev().val();  // sibling 1 up - textarea
+    //console.log(time);
     //console.log(text);
     addEvent(time, text);
   }
-  if (element.matches('.dateBtn')){
+  if (element.is('.dateBtn')){
     if (datepickerEl.val() == '') {
       return;
     } else {
@@ -121,28 +155,6 @@ calendarEl.on('click', function (event){
     }
   }
 })
-
-
-
-
-  // TODO: Add a listener for click events on the save button. This code should
-  // use the id in the containing time-block as a key to save the user input in
-  // local storage. HINT: What does `this` reference in the click listener
-  // function? How can DOM traversal be used to get the "hour-x" id of the
-  // time-block containing the button that was clicked? How might the id be
-  // useful when saving the description in local storage?
-  //
-  // TODO: Add code to apply the past, present, or future class to each time
-  // block by comparing the id to the current hour. HINTS: How can the id
-  // attribute of each time-block be used to conditionally add or remove the
-  // past, present, and future classes? How can Day.js be used to get the
-  // current hour in 24-hour time?
-  //
-  // TODO: Add code to get any user input that was saved in localStorage and set
-  // the values of the corresponding textarea elements. HINT: How can the id
-  // attribute of each time-block be used to do this?
-  //
-  // TODO: Add code to display the current date in the header of the page.
 
   getEvents();
 });
